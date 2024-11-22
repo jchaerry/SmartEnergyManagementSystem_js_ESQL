@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>크로스체크</title>
+</head>
+<body>
+    <h1>테이블 선택</h1>
+    <ol>
+        <li><button onclick="fetchData('User')">User 테이블</button></li>
+        <li><button onclick="fetchData('Device')">Device 테이블</button></li>
+        <li><button onclick="fetchData('EnergyUsage')">EnergyUsage 테이블</button></li>
+        <li><button onclick="fetchData('Alert')">Alert 테이블</button></li>
+    </ol>
+
+    <div id="tableData"></div>
+
+    <script>
+        function fetchData(tableName) {
+            fetch(`/CrossCheck/${tableName}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP 오류! 상태 코드: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    displayTable(data, tableName);
+                })
+                .catch(error => {
+                    console.error('데이터 가져오기 실패:', error);
+                });
+        }
+
+        function displayTable(data, tableName) {
+            const tableDataDiv = document.getElementById('tableData');
+            let tableHTML = `<h2>${tableName} 테이블</h2><table border="1"><tr>`;
+
+            if (data.length > 0) {
+                // 첫 번째 항목을 사용하여 헤더 생성
+                Object.keys(data[0]).forEach(key => {
+                    tableHTML += `<th>${key}</th>`;
+                });
+                tableHTML += '</tr>';
+
+                // 테이블 데이터 행 추가
+                data.forEach(item => {
+                    tableHTML += '<tr>';
+                    Object.values(item).forEach(value => {
+                        tableHTML += `<td>${value}</td>`;
+                    });
+                    tableHTML += '</tr>';
+                });
+
+                tableHTML += '</table>';
+            } else {
+                tableHTML += `<p>데이터가 없습니다.</p>`;
+            }
+
+            tableDataDiv.innerHTML = tableHTML;
+        }
+    </script>
+</body>

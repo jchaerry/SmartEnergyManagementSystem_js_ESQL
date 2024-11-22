@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>회원 정보 삭제</title>
+    <script>
+        // 전화번호로 회원 정보 찾기
+        const findUser = async (phoneNumber) => {
+            const response = await fetch(`/findUser?phoneNumber=${phoneNumber}`);
+            if (response.ok) {
+                const user = await response.json();
+                // 회원 정보를 화면에 표시
+                document.getElementById('userInfo').innerHTML = `
+                    <h2>회원 정보</h2>
+                    <p>이름: ${user.name}</p>
+                    <p>전화번호: ${user.phoneNumber}</p>
+                    <button id="deleteUserBtn">회원 삭제</button>
+                    <button id="cancelBtn">취소</button>
+                `;
+                // 회원 삭제 버튼 클릭 시
+                document.getElementById('deleteUserBtn').addEventListener('click', () => showDeleteForm(user.phoneNumber));
+                // 취소 버튼 클릭 시 Main.html로 이동
+                document.getElementById('cancelBtn').addEventListener('click', () => {
+                    window.location.href = 'Main.html';  // Main.html로 리다이렉트
+                });
+            } else {
+                alert('해당 번호로 가입된 유저가 없습니다.');
+            }
+        };
+
+        // 회원 삭제 폼을 보여주기 위한 함수
+        const showDeleteForm = (phoneNumber) => {
+            document.getElementById('deleteForm').innerHTML = `
+                <h2>회원 삭제</h2>
+                <p>전화번호: ${phoneNumber}</p>
+                <label for="password">비밀번호:</label>
+                <input type="password" id="password" name="password" required><br>
+                <button id="confirmDeleteBtn">삭제</button>
+                <button type="button" id="cancelDeleteBtn">취소</button>
+            `;
+            document.getElementById('confirmDeleteBtn').addEventListener('click', () => deleteUser(phoneNumber));
+            document.getElementById('cancelDeleteBtn').addEventListener('click', () => cancelDelete());
+        };
+
+        // 회원 삭제 요청
+        const deleteUser = async (phoneNumber) => {
+            const password = document.getElementById('password').value;
+            const response = await fetch('/deleteUser', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phoneNumber, password })
+            });
+
+            if (response.ok) {
+                alert('회원 정보가 삭제되었습니다.');
+                window.location.href = 'Main.html';  // Main.html로 리다이렉트
+            } else {
+                const errorMessage = await response.text();
+                alert(errorMessage);
+            }
+        };
+
+        // 취소 버튼 클릭 시 삭제 폼 숨기기
+        const cancelDelete = () => {
+            document.getElementById('deleteForm').innerHTML = '';
+        };
+
+        // 폼 제출 시 새로고침 방지
+        window.onload = () => {
+            const form = document.getElementById('findUserForm');
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();  // 폼 제출 시 페이지 새로고침 방지
+                const phoneNumber = document.getElementById('phoneNumber').value;
+                findUser(phoneNumber);
+            });
+        };
+    </script>
+</head>
+<body>
+    <h1>회원 정보 삭제</h1>
+
+    <!-- 전화번호로 회원 찾기 폼 -->
+    <form id="findUserForm">
+        <label for="phoneNumber">전화번호:</label>
+        <input type="text" id="phoneNumber" name="phoneNumber" placeholder="010-xxxx-xxxx" required><br>
+        <button type="submit">회원 찾기</button>
+    </form>
+
+    <!-- 회원 정보 표시 -->
+    <div id="userInfo"></div>
+
+    <!-- 회원 삭제 폼 -->
+    <div id="deleteForm"></div>
+
+</body>
+</html>

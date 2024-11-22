@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>메인 메뉴</title>
+    <script>
+        // 페이지 로드 시 API 요청
+        window.onload = async () => {
+            try {
+                // 순차적으로 요청을 보냄
+                let response = await fetch('/create-user-table', { method: 'GET' });
+                if (response.ok) {
+                    console.log(await response.text()); // User 테이블 생성 결과 출력
+                } else {
+                    throw new Error('Failed to create user table');
+                }
+
+                response = await fetch('/create-device-table', { method: 'GET' });
+                if (response.ok) {
+                    console.log(await response.text()); // Device 테이블 생성 결과 출력
+                } else {
+                    throw new Error('Failed to create device table');
+                }
+
+                response = await fetch('/create-energyusage-table', { method: 'GET' });
+                if (response.ok) {
+                    console.log(await response.text()); // EnergyUsage 테이블 생성 결과 출력
+                } else {
+                    throw new Error('Failed to create energy usage table');
+                }
+
+                response = await fetch('/create-alert-table', { method: 'GET' });
+                if (response.ok) {
+                    console.log(await response.text()); // Alert 테이블 생성 결과 출력
+                } else {
+                    throw new Error('Failed to create alert table');
+                }
+            } catch (error) {
+                console.error(error); // 에러가 발생하면 에러 메시지 출력
+            }
+        };
+    </script>
+</head>
+<body>
+    <h1>원하는 옵션을 선택하세요</h1>
+    <ol>
+        <li><a href="Regist.html">회원가입</a></li>
+        <li><a href="Login.html">로그인</a></li>
+        <li><a href="FindUser.html">회원 정보 찾기</a></li>
+        <li><a href="DeleteUser.html">회원 정보 삭제</a></li>
+        <li><a href="CrossCheck.html">Cross Check</a></li>
+    </ol>
+</body>
+</html>

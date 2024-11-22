@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>알람</title>
+    <script>
+        async function fetchAlerts() {
+            const userId = sessionStorage.getItem('userId');
+            if (userId) {
+                try {
+                    const response = await fetch(`/displayAlerts?userId=${userId}`);
+                    if (!response.ok) {
+                        throw new Error('API 호출 실패');
+                    }
+                    const data = await response.json();  // JSON 데이터 처리
+
+                    // #alert div에 알림 표시
+                    const alertDiv = document.getElementById('alert');
+                    alertDiv.innerHTML = '';  // 기존 내용 지우기
+                    data.forEach(alert => {
+                        const alertItem = document.createElement('div');
+                        alertItem.textContent = `${alert.alertId}. ${alert.message}`;
+                        alertDiv.appendChild(alertItem);
+                    });
+                } catch (error) {
+                    console.error("API 호출 실패:", error);
+                }
+            }
+        }
+
+        // 알람 읽음 처리 함수
+        async function resolveAlert(event) {
+            event.preventDefault();  // 폼 제출 기본 동작 방지
+            const userId = sessionStorage.getItem('userId');
+
+            const alertId = document.getElementById('alertId').value;  // 입력된 알람 번호 가져오기
+            if (!alertId) {
+                alert('알람 번호를 입력하세요.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/resolveAlert?userId=${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ alertId: alertId })
+                });
+
+                if (!response.ok) {
+                    const errorMessage = await response.text();
+                    throw new Error(errorMessage);
+                }
+
+                const resultMessage = await response.text();
+                alert(resultMessage);  // 성공 메시지 표시
+            } catch (error) {
+                console.error("알람 읽음 처리 실패:", error.message);
+                alert("알람 읽음 처리 실패: " + error.message);
+            }
+        }
+
+        window.onload = function() {
+            fetchAlerts();
+            const alertForm = document.getElementById('alertForm');
+            alertForm.addEventListener('submit', resolveAlert);  // 폼 제출 시 resolveAlert 함수 호출
+        }
+    </script>
+</head>
+<body>
+    <div id="alert"></div>
+
+    <h1>알람 읽음 처리</h1>
+    <form id="alertForm">
+        <label for="alertId">읽음 처리할 알람 번호: </label>
+        <input type="text" id="alertId" name="alertId" required><br>
+        <button type="submit" id="resolvedButton">읽음</button>
+    </form>
+</body>
+</html>

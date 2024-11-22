@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>로그인 메뉴</title>
+    <script>
+        // 로그인된 회원의 전화번호를 가져오는 함수
+        async function getPhoneNumber() {
+            const userId = sessionStorage.getItem('userId');  // 세션에서 로그인된 유저 ID 가져오기
+
+            if (userId) {
+                try {
+                    // 서버에서 전화번호 가져오기
+                    const response = await fetch(`/getPhoneNumber?userId=${userId}`);  // 쿼리 파라미터로 userId 전달
+
+                    if (!response.ok) {
+                        throw new Error('서버 오류');
+                    }
+
+                    const data = await response.json();
+                    if (data.phoneNumber) {
+                        document.getElementById('phoneNumber').textContent = data.phoneNumber;
+                    } else {
+                        document.getElementById('phoneNumber').textContent = '전화번호를 불러올 수 없습니다.';
+                    }
+                } catch (error) {
+                    document.getElementById('phoneNumber').textContent = '서버 오류 발생';
+                    console.error(error);
+                }
+            } else {
+                alert('로그인이 필요합니다.');
+                window.location.href = 'Main.html';  // 로그인 안 된 상태에서 접근 시 Main.html로 리디렉션
+            }
+        }
+
+        // 알람 생성 함수
+        async function generateAlerts() {
+            const userId = sessionStorage.getItem('userId');
+
+            if (userId) {
+                try {
+                    const response = await fetch(`/checkAndGenerateAlerts?userId=${userId}`);
+
+                    if(!response.ok) {
+                        throw new Error('서버 오류');
+                    }
+
+                    const message = await response.text();
+                    
+                    if (message === '알림 확인 완료') {
+                        console.log('알림 생성이 완료되었습니다.');
+                    } else {
+                        console.log('알람 생성 중 문제가 발생했습니다.');
+                    }
+                } catch(error) {
+                    console.error('API 호출 에러: ', error);
+                }
+            }
+        }
+
+        // 로그인 된 회원의 알람 가져오는 함수
+        async function fetchAlerts() {
+        const userId = sessionStorage.getItem('userId');
+        if (userId) {
+            try {
+                const response = await fetch(`/displayAlerts?userId=${userId}`);
+                if (!response.ok) {
+                    throw new Error('API 호출 실패');
+                }
+                const data = await response.json();  // JSON 데이터 처리
+
+                // #alert div에 알림 표시
+                const alertDiv = document.getElementById('alert');
+                alertDiv.innerHTML = '';  // 기존 내용 지우기
+                data.forEach(alert => {
+                    const alertItem = document.createElement('div');
+                    alertItem.textContent = `${alert.alertId}. ${alert.message}`;
+                    alertDiv.appendChild(alertItem);
+                });
+            } catch (error) {
+                console.error("API 호출 실패:", error);
+            }
+        }
+    }
+
+        // 로그아웃 처리 함수
+        function logout() {
+            sessionStorage.removeItem('userId');  // 유저 아이디를 제거
+            sessionStorage.removeItem('phoneNumber'); // 전화번호도 제거
+            alert('로그아웃 되었습니다.');
+            window.location.href = 'Main.html';  // Main.html로 리디렉션
+        }
+
+        //모든 기기 불러오기 함수
+        async function findAllDevice() {
+            const userId = sessionStorage.getItem('userId');  // 세션에서 유저 ID 가져오기
+
+            if (userId) {
+                try {
+                    // 서버로 GET 요청을 보냄
+                    const response = await fetch(`/findAllDevice?userId=${userId}`);
+
+                    if (response.ok) {  // 응답이 정상일 경우
+                        const devices = await response.json();  // JSON 데이터로 파싱
+
+                        // 기기 목록을 처리하는 로직
+                        if (devices.length === 0) {
+                            alert('등록된 기기가 없습니다.');
+                        } else {
+                            const tableData = document.getElementById('tableData');
+                            tableData.innerHTML = '';  // 기존 목록 초기화
+
+                            const table = document.createElement('table');
+                            table.setAttribute('border', '1');  // 테이블에 보더 추가
+                            const headerRow = document.createElement('tr');
+                            headerRow.innerHTML = '<th>기기 고유 ID</th><th>기기 유형</th><th>에너지 등급</th>';
+                            table.appendChild(headerRow);
+
+                            devices.forEach(device => {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `<td>${device.deviceId}</td><td>${device.deviceType}</td><td>${device.energyRating}</td>`;
+                                table.appendChild(row);
+                            });
+
+                            tableData.appendChild(table);
+                        }
+                    } else {
+                        const errorText = await response.text();
+                        console.log('기기 목록을 가져오는 데 실패했습니다: ' + errorText);
+                    }
+                } catch (error) {
+                    console.log('서버와의 통신 중 오류가 발생했습니다.');
+                    console.error(error);
+                }
+            } else {
+                alert('로그인이 필요합니다.');
+                window.location.href = 'Main.html';  // 로그인 안 된 상태에서 접근 시 Main.html로 리디렉션
+            }
+        }
+
+        // 한 달 에너지 사용량 조회 함수
+        async function monthUsage() {
+            const userId = sessionStorage.getItem('userId'); // 세션에서 유저 ID 가져오기
+            const container = document.getElementById('dropdown');
+            const resultContainer = document.getElementById('monthUsageValue'); // 결과를 표시할 div
+
+            const select = document.createElement('select');
+            select.id = 'month-select';
+
+            const months = [
+                '1월', '2월', '3월', '4월', '5월', '6월',
+                '7월', '8월', '9월', '10월', '11월', '12월'
+            ];
+
+            months.forEach((month, index) => {
+                const option = document.createElement('option');
+                option.value = index + 1; // 1부터 12까지 숫자만 값으로 설정
+                option.textContent = month; // '월' 포함 텍스트
+                select.appendChild(option);
+            });
+
+            const button = document.createElement('button');
+            button.textContent = '검색';
+            button.onclick = async () => {
+                const selectedMonth = select.value;
+
+                try {
+                    const response = await fetch(`/monthlyUsage?userId=${userId}&month=${selectedMonth}`, {
+                        method: 'GET',
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`에러 발생: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+
+                    resultContainer.textContent = `${months[selectedMonth - 1]}의 총 전력 사용량: ${data.totalMonthlyUsage}`;
+                } catch (error) {
+                    console.error('에러 발생:', error);
+                    resultContainer.textContent = '사용량 조회 중 문제가 발생했습니다. 다시 시도해주세요.';
+                }
+            };
+
+            container.appendChild(select);
+            container.appendChild(button);
+        }
+
+        // 페이지 로드 후 전화번호 표시
+        window.onload = function() {
+            getPhoneNumber();
+            generateAlerts();
+            fetchAlerts();
+        }
+    </script>
+</head>
+<body>
+    <h1>원하는 옵션을 선택하세요</h1>
+    
+    <div>현재 로그인된 회원 전화번호: <span id="phoneNumber"></span></div><br> <!-- 전화번호 표시 -->
+    
+    <div>안 읽은 알람</div>
+    <div id="alert"></div>
+    
+    <ol>
+        <li><button onclick="logout()">로그아웃(메인 메뉴로 돌아갑니다.)</button></li>  <!-- 로그아웃 버튼 -->
+        <li><button onclick="findAllDevice()">모든 기기 불러오기</button></li>
+        <li><a href="NewDevice.html">새 기기 등록하기</a></li>
+        <li><a href="NewEnergyUsage.html">기기 에너지 사용 기록 등록하기</a></li>
+        <li><button onclick="monthUsage()">한 달 에너지 사용량 조회</button></li>
+        <li><a href="ReadAlert.html">알람 읽음 처리</a></li>
+        <li><a href="CrossCheck.html">Cross Check</a></li>
+    </ol>
+    <div id="tableData"></div>
+    <div id="dropdown"></div>
+    <div id="monthUsageValue"></div>
+</body>
+</html>

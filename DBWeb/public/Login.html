@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>로그인</title>
+    <script>
+        // 로그인 함수
+        async function loginUser(event) {
+            event.preventDefault();  // 기본 폼 제출 동작을 막음
+
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const password = document.getElementById('password').value;
+
+            if (!phoneNumber || !password) {
+                alert('전화번호와 비밀번호를 입력해 주세요.');
+                return;
+            }
+
+            try {
+                // 서버로 POST 요청을 보냄
+                const response = await fetch('/loginUser', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phoneNumber: phoneNumber,
+                        password: password
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.userId) {
+                        alert('로그인 성공!');
+                        sessionStorage.setItem('userId', result.userId);  // 로그인한 유저 ID를 sessionStorage에 저장
+                        window.location.href = '/LoginMenu.html';  // 경로 수정
+                    } else {
+                        alert('로그인 실패: 잘못된 전화번호 또는 비밀번호');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    alert('로그인 실패: ' + errorText);
+                }
+            } catch (error) {
+                alert('로그인 중 오류가 발생했습니다.');
+                console.error(error);
+            }
+        }
+
+
+        // DOMContentLoaded 이벤트로 문서가 완전히 로드된 후 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', loginUser);
+            } else {
+                console.error('로그인 폼을 찾을 수 없습니다.');
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>로그인</h1>
+    <form id="loginForm">
+        <label for="phoneNumber">전화번호:</label>
+        <input type="text" id="phoneNumber" name="phoneNumber" placeholder="010-xxxx-xxxx" required><br>
+        <label for="password">비밀번호:</label>
+        <input type="password" id="password" name="password" required><br>
+        <button type="submit" id="loginButton">로그인</button>
+    </form>
+</body>
+</html>

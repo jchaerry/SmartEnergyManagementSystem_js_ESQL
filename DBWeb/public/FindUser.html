@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>회원 정보 찾기</title>
+    <script>
+        // 폼 제출 시 처리할 함수
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('findUserForm');
+            form.addEventListener('submit', (event) => {
+                event.preventDefault(); // 폼 제출 시 페이지 새로고침 방지
+
+                const phoneNumber = document.getElementById('phoneNumber').value;
+                
+                // 전화번호 형식 검사
+                const phonePattern = /^\d{3}-\d{4}-\d{4}$/;
+                if (!phonePattern.test(phoneNumber)) {
+                    alert('전화번호 형식이 잘못되었습니다. 형식: 010-xxxx-xxxx');
+                    return;
+                }
+
+                // API 호출
+                fetch(`/findUser?phoneNumber=${phoneNumber}`)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json(); // JSON 응답 반환
+                        } else {
+                            throw new Error('해당 번호로 가입된 유저가 없습니다.');
+                        }
+                    })
+                    .then(data => {
+                        // 사용자 정보가 있으면 출력
+                        alert(`회원 정보 \n이름: ${data.name}\n전화번호: ${data.phoneNumber}`);
+                    })
+                    .catch(error => {
+                        // 에러 처리
+                        alert(error.message);
+                    });
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>회원 정보 찾기</h1>
+    <form id="findUserForm">
+        <label for="phoneNumber">전화번호:</label>
+        <input type="text" id="phoneNumber" name="phoneNumber" placeholder="010-xxxx-xxxx" required><br>
+        <button type="submit">검색</button>
+    </form>
+</body>
+</html>

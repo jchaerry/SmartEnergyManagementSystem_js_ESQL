@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html >
+<head>
+    <title>기기 등록</title>
+</head>
+<body>
+    <h1>기기 추가</h1>
+    <form id="deviceForm">
+        <label for="deviceType">기기 유형:</label>
+        <input type="text" id="deviceType" name="deviceType" required><br>
+        <label for="powerConsumption">전력 소비량(kW):</label>
+        <input type="text" id="powerConsumption" name="powerConsumption" required><br>
+        <label for="energyRating">에너지 등급(1~5):</label>
+        <input type="text" id="energyRating" name="energyRating" required><br>
+        <button type="submit" id="addButton">등록</button>
+    </form>
+
+    <script>
+        const form = document.getElementById('deviceForm');
+        const userId = sessionStorage.getItem('userId'); 
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = {
+                deviceType: form.deviceType.value,
+                powerConsumption: Number(form.powerConsumption.value),
+                energyRating: Number(form.energyRating.value),
+            };
+
+            try {
+                const response = await fetch(`/registerDevice?userId=${userId}`, { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                });
+
+                if (response.ok) {
+                    const result = await response.text();
+                    console.log('서버 응답:', result);
+                    alert(result); // 성공 메시지 표시
+                } else {
+                    const error = await response.text();
+                    alert(error); // 에러 메시지 표시
+                }
+            } catch (err) {
+                console.error('Fetch 오류:', err);
+                alert('요청 실패');
+            }
+        });
+    </script>
+</body>
+</html>
