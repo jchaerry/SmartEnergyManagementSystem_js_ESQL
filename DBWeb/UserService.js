@@ -58,7 +58,7 @@ router.get('/findUser', (req, res) => {
 
     const phonePattern = /^\d{3}-\d{4}-\d{4}$/;
     if (!phonePattern.test(phoneNumber)) {
-    return res.status(400).send('전화번호 형식이 잘못되었습니다. 형식: 010-xxxx-xxxx');
+        return res.status(400).send('전화번호 형식이 잘못되었습니다. 형식: 010-xxxx-xxxx');
     }
 
     const sql = 'SELECT * FROM User WHERE phoneNumber = ?';
@@ -77,6 +77,11 @@ router.get('/findUser', (req, res) => {
 
 router.delete('/deleteUser', (req, res) => {
     const { phoneNumber, password } = req.body;
+
+    const phonePattern = /^\d{3}-\d{4}-\d{4}$/;
+    if (!phonePattern.test(phoneNumber)) {
+        return res.status(400).send('전화번호 형식이 잘못되었습니다. 형식: 010-xxxx-xxxx');
+    }
 
     const sql = 'SELECT * FROM User WHERE phoneNumber = ?';
     db.query(sql, [phoneNumber], (err, result) => {
@@ -106,6 +111,11 @@ router.delete('/deleteUser', (req, res) => {
 router.post('/loginUser', (req, res) => {
     const { phoneNumber, password } = req.body;
 
+    const phonePattern = /^\d{3}-\d{4}-\d{4}$/;
+    if (!phonePattern.test(phoneNumber)) {
+        return res.status(400).send('전화번호 형식이 잘못되었습니다. 형식: 010-xxxx-xxxx');
+    }
+
     const sql = 'SELECT userId FROM User WHERE phoneNumber = ? AND password = ?';
     db.query(sql, [phoneNumber, password], (err, result) => {
     if (err) {
@@ -120,46 +130,46 @@ router.post('/loginUser', (req, res) => {
     });
 });
 
-function loginUser(phoneNumber, password) {
-    return new Promise((resolve, reject) => {
-        const sql = 'SELECT userId FROM User WHERE phoneNumber = ? AND password = ?';
+// function loginUser(phoneNumber, password) {
+//     return new Promise((resolve, reject) => {
+//         const sql = 'SELECT userId FROM User WHERE phoneNumber = ? AND password = ?';
         
-        db.query(sql, [phoneNumber, password], (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                if (results.length > 0) {
-                    resolve(results[0].userId); // 로그인 성공 시 userId 반환
-                } else {
-                    resolve(null); // 로그인 실패 시 null 반환
-                }
-            }
-        });
-    });
-}
+//         db.query(sql, [phoneNumber, password], (err, results) => {
+//             if (err) {
+//                 reject(err);
+//             } else {
+//                 if (results.length > 0) {
+//                     resolve(results[0].userId); // 로그인 성공 시 userId 반환
+//                 } else {
+//                     resolve(null); // 로그인 실패 시 null 반환
+//                 }
+//             }
+//         });
+//     });
+// }
 
-router.post('/loginUser', async (req, res) => {
-    const { phoneNumber, password } = req.body;  // 클라이언트에서 보내온 전화번호와 비밀번호
+// router.post('/loginUser', async (req, res) => {
+//     const { phoneNumber, password } = req.body;  // 클라이언트에서 보내온 전화번호와 비밀번호
 
-    if (!phoneNumber || !password) {
-        return res.status(400).send('전화번호와 비밀번호를 입력하세요.');
-    }
+//     if (!phoneNumber || !password) {
+//         return res.status(400).send('전화번호와 비밀번호를 입력하세요.');
+//     }
 
-    try {
-        const userId = await loginUser(phoneNumber, password);
+//     try {
+//         const userId = await loginUser(phoneNumber, password);
 
-        if (userId) {
-            // 로그인 성공 시 세션에 userId 저장
-            req.session.userId = userId;
-            return res.json({ userId: userId });  // 클라이언트에 로그인 성공 응답 보내기
-        } else {
-            return res.status(401).send('로그인 실패: 잘못된 전화번호 또는 비밀번호');
-        }
-    } catch (error) {
-        console.error(error);  // 서버 오류 시 로그 출력
-        res.status(500).send('서버 오류');
-    }
-});
+//         if (userId) {
+//             // 로그인 성공 시 세션에 userId 저장
+//             req.session.userId = userId;
+//             return res.json({ userId: userId });  // 클라이언트에 로그인 성공 응답 보내기
+//         } else {
+//             return res.status(401).send('로그인 실패: 잘못된 전화번호 또는 비밀번호');
+//         }
+//     } catch (error) {
+//         console.error(error);  // 서버 오류 시 로그 출력
+//         res.status(500).send('서버 오류');
+//     }
+// });
 
 
 // 전화번호 조회 함수

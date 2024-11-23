@@ -70,36 +70,9 @@ function averageUsage(deviceId, callback) {
 // 한 달간 사용 내역 조회
 function isUsedThisMonth(usageDate) {
     const currentDate = new Date();
-    const oneMonthAgo = new Date(currentDate.setMonth(currentDate.getMonth() - 1));
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const usageLocalDate = new Date(usageDate);
-    return usageLocalDate >= oneMonthAgo;
-}
-
-function generateAlert(userId, deviceId, alertType, callback) {
-    const currentDate = new Date();
-    const startDate = alertType === 1 || alertType === 2 || alertType === 3 ? new Date(currentDate.getFullYear(), currentDate.getMonth(), 1) : new Date(currentDate.setDate(currentDate.getDate() - 1));
-    const checkSql = `SELECT COUNT(*) AS alertCount FROM Alert WHERE userId = ? AND deviceId = ? AND alertType = ? AND alertDate >= ?`;
-    
-    db.query(checkSql, [userId, deviceId, alertType, startDate], (err, results) => {
-        if (err) {
-            console.error('알람 생성 함수에서 디비 조회 중 에러: ',err);
-            return callback(err);
-        }
-
-        if ((alertType === 1 || alertType === 2 || alertType === 3 || alertType === 4) && results[0].alertCount > 0) {
-            return ;
-        }
-
-        const insertSql = `INSERT INTO Alert (userId, deviceId, alertDate, alertType, resolved)
-                        VALUES (?, ?, CURRENT_DATE, ?, false)`;
-        db.query(insertSql, [userId, deviceId, alertType], (insertErr, insertResult) => {
-            if (insertErr) {
-                console.error('디비에 알람 추가 중 에러: ',insertErr);
-                return callback(insertErr);
-            }
-            callback(null);
-        });
-    });
+    return usageLocalDate >= firstDayOfMonth;
 }
 
 // 사용자 알람 확인 API
@@ -177,6 +150,34 @@ router.get('/checkAndGenerateAlerts', (req, res) => {
         res.status(200).send('알림 확인 완료');
     });
 });
+
+function generateAlert(userId, deviceId, alertType, callback) {
+    const currentDate = new Date();
+    const startDate = alertType === 1 || alertType === 2 || alertType === 3 ? new Date(currentDate.getFullYear(), currentDate.getMonth(), 1) : new Date(currentDate.setDate(currentDate.getDate() - 1));
+    const checkSql = `SELECT COUNT(*) AS alertCount FROM Alert WHERE userId = ? AND deviceId = ? AND alertType = ? AND alertDate >= ?`;
+    
+    db.query(checkSql, [userId, deviceId, alertType, startDate], (err, results) => {
+        if (err) {
+            console.error('알람 생성 함수에서 디비 조회 중 에러: ',err);
+            return callback(err);
+        }
+
+        if ((alertType === 1 || alertType === 2 || alertType === 3 || alertType === 4) && results[0].alertCount > 0) {
+            return ;
+        }
+
+        const insertSql = `INSERT INTO Alert (userId, deviceId, alertDate, alertType, resolved)
+                        VALUES (?, ?, CURRENT_DATE, ?, false)`;
+        db.query(insertSql, [userId, deviceId, alertType], (insertErr, insertResult) => {
+            if (insertErr) {
+                console.error('디비에 알람 추가 중 에러: ',insertErr);
+                return callback(insertErr);
+            }
+            callback(null);
+        });
+    });
+}
+
 
 router.get('/displayAlerts', (req, res) => {
     const userId = req.query.userId;

@@ -32,17 +32,12 @@ router.post('/addEnergyUsage', async (req, res) => {
 
     const datePattern = /^\d{4}-\d{2}-\d{2}$/;
     if (!datePattern.test(date)) {
-    return res.status(400).send('날짜 형식이 잘못되었습니다. 형식: yyyy-MM-dd');
+    return res.status(404).send('날짜 형식이 잘못되었습니다. 형식: yyyy-MM-dd');
     }
 
     const dateObj = new Date(date);
     if (isNaN(dateObj.getTime()) || dateObj.toISOString().slice(0, 10) !== date) {
-        return res.status(400).send('유효하지 않은 날짜입니다.');
-    }
-
-    // 필드 검증
-    if (!deviceId || !date || !usageHours || !userId) {
-        return res.status(400).json('모든 필드(deviceId, date, usageHours, userId)가 필요합니다.');
+        return res.status(404).send('유효하지 않은 날짜입니다.');
     }
 
     try {
